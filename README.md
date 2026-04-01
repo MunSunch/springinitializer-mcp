@@ -64,12 +64,30 @@ scripts\start-http.cmd
 
 ### Docker
 
+Готовый образ из Docker Hub:
+
+```bash
+docker run -p 8080:8080 munirsunchalyaev/springinitializr-mcp:latest
+```
+
+Или собрать локально:
+
 ```bash
 docker build -t springinitializr-mcp .
 docker run -p 8080:8080 springinitializr-mcp
 ```
 
+### Docker Compose (с автообновлением)
+
+```bash
+docker compose up -d
+```
+
+Включает [Watchtower](https://github.com/containrrr/watchtower) — автоматически обновляет контейнер при появлении нового образа в Docker Hub.
+
 ## Настройка в Claude Code
+
+### Локальный сервер (stdio)
 
 ```bash
 claude mcp add springinitializr node /path/to/springinitializr-mcp/dist/index.js
@@ -79,6 +97,12 @@ claude mcp add springinitializr node /path/to/springinitializr-mcp/dist/index.js
 
 ```cmd
 claude mcp add springinitializr node C:\path\to\springinitializr-mcp\dist\index.js
+```
+
+### Удалённый сервер (HTTP)
+
+```bash
+claude mcp add springinitializr --transport http http://your-server:8080/mcp
 ```
 
 Проверить, что сервер добавлен:
