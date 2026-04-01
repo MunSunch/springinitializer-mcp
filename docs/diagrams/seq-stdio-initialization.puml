@@ -1,0 +1,41 @@
+@startuml seq-stdio-initialization
+title Инициализация через stdio
+
+autonumber
+
+actor "Пользователь" as user
+participant "AI-ассистент\n(MCP-клиент)" as client
+participant "MCP Server\n(index.ts)" as server
+participant "StdioTransport" as transport
+
+user -> client : Запускает AI-ассистента с MCP-конфигурацией
+activate client
+
+client -> server : Запускает процесс (spawn)
+activate server
+
+server -> server : Разбирает аргументы CLI (режим stdio)
+server -> server : Создаёт экземпляр McpServer
+server -> server : Регистрирует инструменты, ресурсы, промпты
+server -> transport : Создаёт StdioServerTransport
+activate transport
+
+server -> transport : server.connect(transport)
+transport -> transport : Слушает stdin/stdout
+
+client -> transport : Запрос initialize (JSON-RPC)
+transport -> server : Маршрутизирует к обработчику
+server --> transport : Ответ initialize (capabilities)
+transport --> client : JSON-RPC ответ
+
+client -> transport : notifications/initialized
+transport -> server : Обрабатывает уведомление
+
+deactivate transport
+
+note over client, server : Сессия установлена, готов к вызовам инструментов
+
+deactivate server
+deactivate client
+
+@enduml

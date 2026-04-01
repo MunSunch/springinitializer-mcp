@@ -1,0 +1,49 @@
+@startuml seq-http-initialization
+title Инициализация HTTP-сессии
+
+autonumber
+
+participant "MCP-клиент" as client
+participant "Express\n(HTTP-сервер)" as express
+participant "MCP Server\n(index.ts)" as server
+participant "StreamableHTTP\nTransport" as transport
+
+client -> express : POST /mcp (запрос initialize)
+activate express
+
+express -> express : Проверка: нет заголовка сессии + метод = initialize
+express -> transport : Создаёт StreamableHTTPServerTransport
+activate transport
+
+express -> server : Создаёт экземпляр McpServer
+activate server
+server -> server : Регистрирует инструменты, ресурсы, промпты
+express -> server : server.connect(transport)
+
+express -> transport : handleRequest(req, res, body)
+transport -> server : Маршрутизирует initialize
+server --> transport : Ответ initialize (capabilities)
+transport --> express : SSE-ответ с заголовком Mcp-Session-Id
+
+express -> express : Сохраняет сессию в Map
+express --> client : HTTP 200 + text/event-stream + Mcp-Session-Id
+
+deactivate server
+deactivate transport
+deactivate express
+
+client -> express : POST /mcp (tools/list)\nЗаголовок: Mcp-Session-Id
+activate express
+express -> express : Ищет сессию в Map
+express -> transport : handleRequest(req, res, body)
+activate transport
+transport -> server : Маршрутизирует tools/list
+activate server
+server --> transport : Список инструментов
+deactivate server
+transport --> express : SSE-ответ
+deactivate transport
+express --> client : HTTP 200 + определения инструментов
+deactivate express
+
+@enduml

@@ -1,0 +1,16 @@
+@startuml c4-context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title Диаграмма контекста системы — Spring Initializr MCP Server
+
+Person(user, "Пользователь", "Разработчик, использующий AI-ассистента для генерации Spring Boot проектов")
+System(mcp_server, "Spring Initializr MCP Server", "MCP-сервер, предоставляющий инструменты, ресурсы и промпты для генерации Spring Boot проектов")
+System_Ext(ai_assistant, "AI-ассистент", "Claude Desktop, Claude Code, Cursor или любой MCP-совместимый клиент")
+System_Ext(spring_initializr, "Spring Initializr", "start.spring.io — генерирует архивы Spring Boot проектов")
+
+Rel(user, ai_assistant, "Отправляет запросы на естественном языке")
+Rel(ai_assistant, mcp_server, "Вызывает MCP-инструменты, читает ресурсы, использует промпты", "MCP Protocol (stdio / HTTP)")
+Rel(mcp_server, spring_initializr, "Запрашивает метаданные, скачивает ZIP-архив проекта", "HTTPS")
+Rel_Back(ai_assistant, user, "Возвращает результат")
+
+@enduml

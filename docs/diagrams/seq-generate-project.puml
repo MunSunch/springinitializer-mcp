@@ -1,0 +1,63 @@
+@startuml seq-generate-project
+title Генерация проекта
+
+autonumber
+
+actor "Пользователь" as user
+participant "AI-ассистент\n(MCP-клиент)" as client
+participant "MCP Server" as server
+participant "generate-project.ts\n(Инструмент)" as tool
+participant "url-builder.ts" as builder
+participant "download.ts\n(Загрузка)" as download
+participant "Spring Initializr\nAPI" as api
+
+user -> client : "Создай Spring Boot проект\nс Web и JPA"
+activate client
+
+client -> server : resources/read (springinitializr://options)
+activate server
+server -> api : GET /metadata/client
+activate api
+api --> server : JSON-метаданные
+deactivate api
+server --> client : Опции (версии Boot, Java и др.)
+deactivate server
+
+client -> server : resources/read (springinitializr://dependencies)
+activate server
+server --> client : Список зависимостей (из кэша)
+deactivate server
+
+client -> client : Выбирает параметры на основе запроса
+
+client -> server : tools/call (generate-spring-boot-project)
+activate server
+server -> tool : Выполняет с параметрами
+activate tool
+
+tool -> builder : fromParameters({type, language, ...})
+activate builder
+builder -> builder : Формирует URL с кодированием
+builder --> tool : URL для скачивания
+deactivate builder
+
+tool -> download : fetchZip(url)
+activate download
+
+download -> api : GET /starter.zip?type=...&dependencies=...
+activate api
+api --> download : ZIP-поток
+deactivate api
+
+download --> tool : Buffer (ZIP-архив в памяти)
+deactivate download
+
+tool --> server : Результат: base64(ZIP) + текстовое сообщение
+deactivate tool
+server --> client : Ответ инструмента (архив + описание)
+deactivate server
+
+client --> user : "Проект сгенерирован: my-app.zip (57 КБ)\nс зависимостями Web и JPA"
+deactivate client
+
+@enduml

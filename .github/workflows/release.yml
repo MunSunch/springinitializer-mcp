@@ -1,0 +1,94 @@
+name: Release
+
+on:
+  release:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag'
+        required: true
+        default: 'v1.0.0'
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest, macos-14]
+        include:
+          - os: ubuntu-latest
+            platform: linux
+            arch: x64
+          - os: windows-latest
+            platform: windows
+            arch: x64
+          - os: macos-latest
+            platform: macos
+            arch: x64
+          - os: macos-14
+            platform: macos
+            arch: arm64
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Create standalone executable
+        run: npx pkg dist/index.js --target node22-${{ matrix.platform }}-${{ matrix.arch }} --output springinitializr-mcp-${{ matrix.platform }}-${{ matrix.arch }}
+
+      - name: Upload executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: springinitializr-mcp-${{ matrix.platform }}-${{ matrix.arch }}
+          path: springinitializr-mcp-${{ matrix.platform }}-${{ matrix.arch }}*
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: write
+      actions: read
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Display structure of downloaded files
+        run: ls -la ./artifacts/
+
+      - name: Get release tag
+        id: release_info
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            echo "tag=${{ github.event.release.tag_name }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=${{ github.event.inputs.tag }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.release_info.outputs.tag }}
+          name: Release ${{ steps.release_info.outputs.tag }}
+          draft: false
+          prerelease: false
+          files: ./artifacts/*/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,40 @@
+{
+  "name": "springinitializr-mcp",
+  "version": "1.0.0",
+  "description": "MCP server that wraps the Spring Initializr API for generating Spring Boot projects",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "springinitializr-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "start:http": "node dist/index.js --transport http",
+    "dev": "tsx src/index.ts",
+    "dev:http": "tsx src/index.ts --transport http",
+    "generate": "tsx scripts/generate-constants.ts",
+    "prebuild": "npm run generate",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [
+    "mcp",
+    "spring-boot",
+    "spring-initializr",
+    "model-context-protocol"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "express": "^5.1.0",
+    "zod": "^3.24.4"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.2",
+    "@types/node": "^22.15.3",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.2"
+  }
+}

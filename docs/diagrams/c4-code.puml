@@ -1,0 +1,31 @@
+@startuml c4-code
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title Диаграмма кода — Spring Initializr MCP Server
+
+System_Ext(mcp_client, "MCP-клиент", "AI-ассистент")
+System_Ext(spring_api, "Spring Initializr API", "start.spring.io")
+
+Container_Boundary(server, "MCP Server") {
+    Component(index, "index.ts", "Точка входа", "Разбирает аргументы CLI, создаёт McpServer, запускает stdio или HTTP транспорт")
+    Component(generate_project, "generate-project.ts", "MCP Tool", "Регистрирует инструмент generate-spring-boot-project с валидацией через Zod")
+    Component(url_builder, "url-builder.ts", "URL Builder", "Fluent-построитель URL для Spring Initializr с кодированием параметров")
+    Component(constants, "constants.ts", "Константы", "Автогенерируемые описания параметров (версии Java, зависимости)")
+    Component(metadata, "spring-initializr-metadata.ts", "MCP Resources", "Предоставляет опции, зависимости, зависимости по категориям из API")
+    Component(prompt, "generate-project-prompt.ts", "MCP Prompt", "Структурированный промпт для пошаговой генерации проекта")
+    Component(download, "download.ts", "Загрузка", "HTTP-загрузка ZIP-архива в память")
+    Component(logger, "logger.ts", "Логгер", "Уровневое логирование: stderr для stdio / stdout для HTTP")
+}
+
+Rel(mcp_client, index, "MCP Protocol")
+Rel(index, generate_project, "registerTools()")
+Rel(index, metadata, "registerResources()")
+Rel(index, prompt, "registerPrompts()")
+Rel(generate_project, url_builder, "Формирует URL загрузки")
+Rel(generate_project, constants, "Читает описания параметров")
+Rel(generate_project, download, "fetchZip()")
+Rel(generate_project, logger, "Логирует операции")
+Rel(metadata, spring_api, "Запрашивает метаданные", "HTTPS")
+Rel(download, spring_api, "Скачивает ZIP", "HTTPS")
+
+@enduml

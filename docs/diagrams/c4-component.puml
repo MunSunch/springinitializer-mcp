@@ -1,0 +1,27 @@
+@startuml c4-component
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title Диаграмма компонентов — Spring Initializr MCP Server
+
+Person(user, "Пользователь", "Разработчик")
+System_Ext(ai_assistant, "AI-ассистент", "MCP-клиент")
+System_Ext(spring_initializr, "Spring Initializr API", "start.spring.io")
+
+System_Boundary(mcp_system, "Spring Initializr MCP Server") {
+    Container(entry, "Точка входа", "Node.js / TypeScript", "Инициализирует MCP-сервер, управляет транспортами (stdio / HTTP)")
+    Container(tools, "Инструменты", "MCP Tool", "generate-spring-boot-project: формирует URL, скачивает ZIP и возвращает клиенту")
+    Container(resources, "Ресурсы", "MCP Resource", "Предоставляет метаданные Spring Initializr: опции, зависимости, категории")
+    Container(prompts, "Промпты", "MCP Prompt", "generate-spring-boot-project: структурированный промпт для генерации проекта")
+    Container(utils, "Утилиты", "TypeScript", "HTTP-загрузка, логирование")
+}
+
+Rel(user, ai_assistant, "Запрос на естественном языке")
+Rel(ai_assistant, entry, "MCP Protocol", "stdio / Streamable HTTP")
+Rel(entry, tools, "Регистрирует и маршрутизирует")
+Rel(entry, resources, "Регистрирует и маршрутизирует")
+Rel(entry, prompts, "Регистрирует и маршрутизирует")
+Rel(tools, utils, "Скачивание архива")
+Rel(resources, spring_initializr, "Запрашивает метаданные", "HTTPS")
+Rel(utils, spring_initializr, "Скачивает ZIP-архив проекта", "HTTPS")
+
+@enduml
