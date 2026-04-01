@@ -1,5 +1,9 @@
 # Spring Initializr MCP Server
 
+[Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server that wraps the [Spring Initializr](https://start.spring.io) API. Generate Spring Boot projects directly from AI assistants like Claude, Cursor, Windsurf and others — pick dependencies, Java version, build system and download a ready-to-use project archive, all via a text prompt.
+
+---
+
 MCP-сервер для генерации Spring Boot проектов через AI-ассистентов (Claude, Cursor и др.).
 
 ## Какую проблему решает
