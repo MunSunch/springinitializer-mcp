@@ -16,7 +16,7 @@ activate server
 
 server -> server : Разбирает аргументы CLI (режим stdio)
 server -> server : Создаёт экземпляр McpServer
-server -> server : Регистрирует инструменты, ресурсы, промпты
+server -> server : Регистрирует инструменты (async, из метаданных API),\nресурсы, промпты
 server -> transport : Создаёт StdioServerTransport
 activate transport
 

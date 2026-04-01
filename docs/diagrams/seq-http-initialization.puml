@@ -17,7 +17,7 @@ activate transport
 
 express -> server : Создаёт экземпляр McpServer
 activate server
-server -> server : Регистрирует инструменты, ресурсы, промпты
+server -> server : Регистрирует инструменты (async, из метаданных API),\nресурсы, промпты
 express -> server : server.connect(transport)
 
 express -> transport : handleRequest(req, res, body)
