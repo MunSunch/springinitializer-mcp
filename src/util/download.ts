@@ -5,7 +5,11 @@ export async function fetchZip(url: string): Promise<Buffer> {
 
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(`Failed to download: HTTP ${response.status}`);
+    let detail = "";
+    try {
+      detail = await response.text();
+    } catch { /* ignore */ }
+    throw new Error(`Failed to download: HTTP ${response.status}${detail ? ` — ${detail}` : ""}`);
   }
   if (!response.body) {
     throw new Error("Empty response body");

@@ -10,12 +10,11 @@ MCP-сервер на Node.js + TypeScript, оборачивающий Spring In
 
 ```bash
 npm install          # установить зависимости
-npm run build        # компиляция (tsc), перед этим автоматически запускается npm run generate
+npm run build        # компиляция (tsc)
 npm run dev          # запуск без компиляции (tsx, stdio)
 npm run dev:http     # запуск без компиляции (tsx, HTTP)
 npm test             # запуск тестов (vitest)
 npx vitest run tests/tool/url-builder.test.ts  # запуск одного теста
-npm run generate     # обновить constants.ts из Spring Initializr API
 ```
 
 ## Архитектура
@@ -32,9 +31,9 @@ npm run generate     # обновить constants.ts из Spring Initializr API
 - **Resources** — метаданные Spring Initializr в двух форматах: `text/plain` и `application/json` (суффикс `/json`). Метаданные кэшируются в памяти модуля.
 - **Prompt** `generate-spring-boot-project` — структурированный промпт, направляющий AI через чтение ресурсов → выбор параметров → вызов инструмента.
 
-### Генерация кода
+### Динамическая схема инструмента
 
-`src/tool/constants.ts` — автогенерируемый файл. Скрипт `scripts/generate-constants.ts` запрашивает `https://start.spring.io/metadata/client` и генерирует описания параметров с актуальными версиями Java и списком зависимостей. Запускается автоматически перед `npm run build` через `prebuild`.
+При старте сервера `registerTools()` запрашивает метаданные из `https://start.spring.io/metadata/client` и динамически строит Zod-схему параметров инструмента из актуальных данных. Если API недоступен — сервер не стартует (fail-fast). Валидация параметров также происходит по живым метаданным перед каждым запросом. Ресурсы аналогично итерируют по метаданным динамически.
 
 ## Соглашения
 

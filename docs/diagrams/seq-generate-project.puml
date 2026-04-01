@@ -35,9 +35,9 @@ activate server
 server -> tool : Выполняет с параметрами
 activate tool
 
-tool -> builder : fromParameters({type, language, ...})
+tool -> builder : buildDownloadUrl(queryParams)
 activate builder
-builder -> builder : Формирует URL с кодированием
+builder -> builder : Кодирует параметры и формирует URL
 builder --> tool : URL для скачивания
 deactivate builder
 

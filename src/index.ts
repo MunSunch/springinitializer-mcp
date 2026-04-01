@@ -13,12 +13,12 @@ import { logger } from "./util/logger.js";
 const SERVER_NAME = "springinitializr";
 const SERVER_VERSION = "1.0.0";
 
-function createServer(): McpServer {
+async function createServer(): Promise<McpServer> {
   const server = new McpServer({
     name: SERVER_NAME,
     version: SERVER_VERSION,
   });
-  registerTools(server);
+  await registerTools(server);
   registerResources(server);
   registerPrompts(server);
   return server;
@@ -54,7 +54,7 @@ async function startHttp() {
         }
       };
 
-      const server = createServer();
+      const server = await createServer();
       await server.connect(transport);
       await transport.handleRequest(req, res, req.body);
 
@@ -104,7 +104,7 @@ async function startHttp() {
 
 async function startStdio() {
   logger.info(`Server starting (stdio)`);
-  const server = createServer();
+  const server = await createServer();
   const transport = new StdioServerTransport();
   await server.connect(transport);
   logger.info(`Server connected (stdio)`);

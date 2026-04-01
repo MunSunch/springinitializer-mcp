@@ -33,13 +33,13 @@ AI-ассистент отправляет запрос `tools/call` для ин
 MCP-сервер маршрутизирует вызов инструмента к зарегистрированному обработчику в `generate-project.ts`.
 
 ## Шаг 11 — Формирование URL загрузки
-Инструмент вызывает `SpringInitializrUrlBuilder.fromParameters()` со всеми переданными параметрами для построения URL загрузки.
+Инструмент вызывает `buildDownloadUrl()` с параметрами запроса (имена ключей маппятся из параметров инструмента в имена API, например `projectType` → `type`) для построения URL загрузки.
 
-## Шаг 12 — URL Builder кодирует параметры
-Построитель перебирает все непустые параметры, кодирует значения через `encodeURIComponent` и соединяет их в строку запроса, добавляемую к `https://start.spring.io/starter.zip`.
+## Шаг 12 — Кодирование параметров
+Функция перебирает все параметры, кодирует значения через `encodeURIComponent` и соединяет их в строку запроса, добавляемую к `https://start.spring.io/starter.zip`.
 
 ## Шаг 13 — Возврат URL загрузки
-Сформированный URL (например, `https://start.spring.io/starter.zip?type=gradle-project&language=java&dependencies=web%2Cdata-jpa`) возвращается обработчику инструмента.
+Сформированный URL (например, `https://start.spring.io/starter.zip?type=gradle-project&language=java&dependencies=web%2Cdata-jpa`) возвращается инструменту.
 
 ## Шаг 14 — Вызов fetchZip
 Инструмент вызывает `fetchZip()` с URL загрузки для получения ZIP-архива.

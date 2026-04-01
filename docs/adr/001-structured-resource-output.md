@@ -90,6 +90,7 @@
 ## Затронутые файлы
 
 - `src/resource/spring-initializr-metadata.ts` — добавление 3 новых ресурсов
+- `src/resource/metadata.ts` — общие типы и функция загрузки метаданных
 
 ## Альтернативы
 

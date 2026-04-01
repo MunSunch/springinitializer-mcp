@@ -193,9 +193,6 @@ npm run dev
 # Запуск в HTTP-режиме без компиляции
 npm run dev:http
 
-# Обновить константы (версии Java, список зависимостей) из Spring Initializr API
-npm run generate
-
 # Запуск тестов
 npm test
 ```

@@ -1,52 +1,10 @@
 import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { logger } from "../util/logger.js";
+import { fetchMetadata, type MetadataField, type MetadataOption, type DependencyItem } from "./metadata.js";
 
-const METADATA_URL = "https://start.spring.io/metadata/client";
+const IGNORED_KEYS = new Set(["_links", "dependencies"]);
 
-interface MetadataOption {
-  id: string;
-  name: string;
-  description?: string;
-}
-
-interface DependencyItem {
-  id: string;
-  name: string;
-  description?: string;
-}
-
-interface DependencyCategory {
-  name: string;
-  values: DependencyItem[];
-}
-
-interface Metadata {
-  bootVersion?: { default?: string; values?: MetadataOption[] };
-  type?: { default?: string; values?: MetadataOption[] };
-  language?: { default?: string; values?: MetadataOption[] };
-  packaging?: { default?: string; values?: MetadataOption[] };
-  javaVersion?: { default?: string; values?: MetadataOption[] };
-  dependencies?: { values?: DependencyCategory[] };
-}
-
-let cachedMetadata: Metadata | null = null;
-
-async function fetchMetadata(): Promise<Metadata> {
-  if (cachedMetadata) return cachedMetadata;
-
-  logger.debug("Fetching Spring Initializr metadata...");
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 15000);
-
-  try {
-    const response = await fetch(METADATA_URL, { signal: controller.signal });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    cachedMetadata = (await response.json()) as Metadata;
-    logger.info("Spring Initializr metadata fetched successfully");
-    return cachedMetadata;
-  } finally {
-    clearTimeout(timeout);
-  }
+function isMetadataField(value: unknown): value is MetadataField {
+  return value != null && typeof value === "object" && "type" in value && typeof (value as MetadataField).type === "string";
 }
 
 function formatOptions(label: string, defaultVal: string | undefined, values: MetadataOption[] | undefined): string {
@@ -59,27 +17,31 @@ function formatOptions(label: string, defaultVal: string | undefined, values: Me
   return `${label}:\n${lines.join("\n")}\n`;
 }
 
+function fieldLabel(key: string): string {
+  return key.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase());
+}
+
 export function registerResources(server: McpServer): void {
-  // Overview resource — all options except dependencies
+  // Overview resource — all options except dependencies (dynamic)
   server.resource(
     "spring-initializr-options",
     "springinitializr://options",
     {
-      description: "Available Spring Initializr project options: project types, languages, Java versions, packaging, and Spring Boot versions",
+      description: "Available Spring Initializr project options",
       mimeType: "text/plain",
     },
     async () => {
       const m = await fetchMetadata();
-      const text = [
-        "# Spring Initializr — Available Options\n",
-        formatOptions("Project types", m.type?.default, m.type?.values),
-        formatOptions("Languages", m.language?.default, m.language?.values),
-        formatOptions("Java versions", m.javaVersion?.default, m.javaVersion?.values),
-        formatOptions("Packaging", m.packaging?.default, m.packaging?.values),
-        formatOptions("Spring Boot versions", m.bootVersion?.default, m.bootVersion?.values),
-      ].join("\n");
+      const sections: string[] = ["# Spring Initializr — Available Options\n"];
 
-      return { contents: [{ uri: "springinitializr://options", text, mimeType: "text/plain" }] };
+      for (const [key, value] of Object.entries(m)) {
+        if (IGNORED_KEYS.has(key)) continue;
+        if (!isMetadataField(value)) continue;
+        if (!value.values || value.values.length === 0) continue;
+        sections.push(formatOptions(fieldLabel(key), value.default, value.values));
+      }
+
+      return { contents: [{ uri: "springinitializr://options", text: sections.join("\n"), mimeType: "text/plain" }] };
     },
   );
 
@@ -146,18 +108,20 @@ export function registerResources(server: McpServer): void {
     "spring-initializr-options-json",
     "springinitializr://options/json",
     {
-      description: "Spring Initializr project options in JSON: project types, languages, Java versions, packaging, Spring Boot versions",
+      description: "Spring Initializr project options in JSON",
       mimeType: "application/json",
     },
     async () => {
       const m = await fetchMetadata();
-      const json = {
-        projectTypes: formatFieldJson(m.type),
-        languages: formatFieldJson(m.language),
-        javaVersions: formatFieldJson(m.javaVersion),
-        packaging: formatFieldJson(m.packaging),
-        bootVersions: formatFieldJson(m.bootVersion),
-      };
+      const json: Record<string, unknown> = {};
+
+      for (const [key, value] of Object.entries(m)) {
+        if (IGNORED_KEYS.has(key)) continue;
+        if (!isMetadataField(value)) continue;
+        if (!value.values || value.values.length === 0) continue;
+        json[key] = formatFieldJson(value);
+      }
+
       return {
         contents: [{
           uri: "springinitializr://options/json",
@@ -233,10 +197,10 @@ export function registerResources(server: McpServer): void {
   );
 }
 
-function formatFieldJson(field?: { default?: string; values?: MetadataOption[] }) {
+function formatFieldJson(field: MetadataField) {
   return {
-    default: field?.default ?? null,
-    values: (field?.values ?? []).map((v) => ({
+    default: field.default ?? null,
+    values: (field.values ?? []).map((v) => ({
       id: v.id,
       name: v.name,
       ...(v.description ? { description: v.description } : {}),
