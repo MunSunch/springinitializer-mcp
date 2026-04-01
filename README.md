@@ -184,6 +184,8 @@ claude mcp list
 
 > Создай Maven-проект с Spring Security, Actuator и Thymeleaf, Java 21
 
+![](readme_/example.png)
+
 ## Разработка
 
 ```bash
